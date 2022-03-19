@@ -1,0 +1,147 @@
+<div class="post-container">
+  <article class="post" id="post">
+    <header class="post-header text-center">
+      <h1 class="title">
+        <%=page.title%>
+      </h1>
+      <span>
+        <% if (theme.show_date && page.date) { %>
+        <time class="time" datetime="<%=date_xml(page.date)%>">
+        <%=date(page.date)%>
+      </time>
+        <% } %>
+      </span>
+      <span class="slash">/</span>
+      <span class="post-meta">
+      <span class="post-tags">
+        <%- list_tags(page.tags, {
+          show_count: false,
+          class: 'article-tag'
+        }) %>
+      </span>
+    </span>
+      <span class="slash">/</span>
+      <span class="read">
+      <span id="busuanzi_value_page_pv"></span> 点击
+    </span>
+      <span class="slash">/</span>
+      <span class="read">阅读耗时 <%=readingTime(page.content, '分钟') %></span>
+    </header>
+
+    <div class="post-content">
+      <%-page.content%>
+    </div>
+
+  </article>
+  <div class="toc-container">
+    <%- partial('partials/toc') %>
+  </div>
+</div>
+<%- partial('partials/copyright') %>
+<%- partial('partials/share') %>
+<%- partial('partials/prenext') %>
+<%- partial('partials/comment') %>
+
+<script>
+// 复制代码
+let html = '<span class="copy-btn">复制代码</span>'
+let buttonClassName = 'copy-code'
+
+// 展开/收起
+let showHtml = '<span class="show-btn unfold">展开</span><span class="show-btn fold" style="display:none;">收起</span>'
+let showClassName = 'show'
+
+// 给代码框添加最大高度限制
+let maxHeight = 300
+const addLimit =function(node){
+  let codeContainer = node.querySelector('table')
+  let h = codeContainer.offsetHeight  
+  if(h <= maxHeight) return
+  codeContainer.style.maxHeight = maxHeight + 'px'
+}
+
+// 提示框
+const showtip = function(msg) {
+  if(!msg)
+    return 
+  const BODY = document.getElementsByTagName('body')[0];
+  let tipbox = document.createElement('div');
+  tipbox.innerHTML = msg
+  tipbox.className = 'tip'
+  BODY.appendChild(tipbox)
+  setTimeout(function() {
+    document.querySelector('.tip').classList.add('hide');
+    setTimeout(function() {
+      document.querySelector('.tip').remove()
+    }, 500);
+  }, 1500);
+}
+
+// 添加复制代码按钮
+let arr = document.querySelectorAll('figure')
+for(let i=0;i<arr.length;i++){
+  let node = arr[i]
+  let newElement = document.createElement('div');
+  newElement.className = buttonClassName
+  newElement.innerHTML  = html
+  let referenceNode = node.querySelector('table')
+  let t = node.insertBefore(newElement,referenceNode)   
+
+  // 添加展开/收起按钮
+  // 小于最大高度的，不添加高度限制
+  if(referenceNode.offsetHeight  > maxHeight){    
+    showElement = document.createElement('div');
+    showElement.className = showClassName
+    showElement.innerHTML  = showHtml
+    node.appendChild(showElement)
+    // 给代码框添加最大高度限制
+    addLimit(node)
+  }
+}
+
+//给复制代码按钮绑定点击事件
+document.addEventListener('click', function(e){  
+    let classArr = e.target.className.split(' ')
+    // 复制代码
+    if(e.target.innerText === '复制代码' && classArr.includes('copy-btn')){
+      let parentNode = e.target.parentNode.parentNode      
+      let code = '';
+      let codeLineArr = parentNode.querySelectorAll('.code .line')
+      for(let i=0;i<codeLineArr.length;i++){
+        codeLine = codeLineArr[i]
+        code = code + codeLine.innerText + '\n'          
+      }
+      // 复制到剪贴板
+      navigator.clipboard.writeText(code)
+      .then(res=>{
+        showtip('复制成功')
+      })
+      .catch(err=>{
+        console.log(err)
+      })
+    }
+    // 收起/展开代码块
+    if(['展开','收起'].includes(e.target.innerText) && classArr.includes('show-btn')){    
+      // 当点击展开按钮时
+      if(classArr.includes('unfold')){        
+        let unfoldNode = e.target.parentNode.parentNode.querySelector('table')
+        unfoldNode.style = ''
+        // 显示收起按钮
+        e.target.parentNode.querySelector('.fold').style.display = 'inline'
+        // 隐藏开展按钮
+        e.target.parentNode.querySelector('.unfold').style.display = 'none'
+      }
+      // 当点击收起按钮时
+      if(classArr.includes('fold')){
+        let foldNode = e.target.parentNode.parentNode
+        addLimit(foldNode)
+        // 显示展开按钮
+        e.target.parentNode.querySelector('.unfold').style.display = 'inline'
+        // 隐藏收起按钮
+        e.target.parentNode.querySelector('.fold').style.display = 'none'
+      }
+    }
+  })
+
+// 添加 收起/展开按钮
+</script>
